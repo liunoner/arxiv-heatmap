@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>中国顶尖高校科研内卷交互地图</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="echarts_data.js"></script>
+    <style>
+        body { margin: 0; padding: 0; background-color: #f4f4f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #header { text-align: center; padding: 20px 0; background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        #header h1 { margin: 0; color: #333; }
+        #header p { margin: 5px 0 0 0; color: #666; font-size: 14px; }
+        /* 图表容器：占据屏幕主体空间 */
+        #heatmap-container { width: 95vw; height: 80vh; margin: 20px auto; background-color: #fff; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <h1>中国顶尖高校科研作息时间热力图</h1>
+        <p>数据源：arXiv 离线全量数据集 | 指标：单日相对提交活跃度 (%)</p>
+    </div>
+
+    <div id="heatmap-container"></div>
+
+    <script>
+        // 初始化 ECharts 实例
+        var myChart = echarts.init(document.getElementById('heatmap-container'));
+
+        // 利用 HEATMAP_DATA 配置选项
+        var option = {
+            tooltip: {
+                position: 'top',
+                formatter: function (params) {
+                    // params.value[0]是x轴索引, params.value[1]是y轴索引, params.value[2]是真实数值
+                    var uni = HEATMAP_DATA.yAxis[params.value[1]];
+                    var hour = HEATMAP_DATA.xAxis[params.value[0]];
+                    var value = params.value[2];
+                    return `<div style="padding: 5px; font-weight: bold;">
+                            ${uni} <br/> 
+                            时段: ${hour} <br/> 
+                            相对活跃度: <span style="color:#e74c3c">${value}%</span>
+                            </div>`;
+                }
+            },
+            grid: { height: '70%', top: '10%', left: '15%', right: '10%' },
+            xAxis: {
+                type: 'category',
+                data: HEATMAP_DATA.xAxis,
+                splitArea: { show: true }
+            },
+            yAxis: {
+                type: 'category',
+                data: HEATMAP_DATA.yAxis,
+                splitArea: { show: true }
+            },
+            visualMap: {
+                min: 0,
+                max: 20, // 设定颜色映射的上限，超过 20% 的均为最高级红色
+                calculable: true,
+                orient: 'horizontal',
+                left: 'center',
+                bottom: '5%',
+                inRange: {
+                    // 经典的冷暖色带映射：浅黄 -> 橙 -> 红色 -> 深红
+                    color: ['#ffffbf', '#fee090', '#fdae61', '#f46d43', '#d73027', '#a50026']
+                },
+                text: ['极度爆肝 (高)', '正常作息 (低)']
+            },
+            series: [{
+                name: '科研内卷指数',
+                type: 'heatmap',
+                data: HEATMAP_DATA.data,
+                label: { show: false }, // 数据点太密，关闭默认数字显示，靠鼠标悬浮查看
+                emphasis: {
+                    itemStyle: { shadowBlur: 10, shadowColor: 'rgba(0, 0, 0, 0.5)' }
+                }
+            }]
+        };
+
+        // 渲染图表
+        myChart.setOption(option);
+
+        // 响应式设计：窗口缩放时自适应
+        window.addEventListener('resize', function() { myChart.resize(); });
+    </script>
+</body>
+</html>
